@@ -1,18 +1,17 @@
 package main;
 
 import Guo_Cam.CameraController;
-import floors.Floor;
+import formInteractive.graphAdjusting.TrafficNode;
+import formInteractive.graphAdjusting.spacialElements.Atrium;
+import formInteractive.graphAdjusting.spacialElements.Escalator;
 import processing.core.PApplet;
 import render.JtsRender;
-import site.InputSite;
-import site.blockSubdivision.StreetGenerator;
-import site.blockSubdivision.Subdivision;
-import wblut.geom.WB_Point;
+import site.Exporter;
+import site.Importer;
+import site.generator.BuildingGenerator;
+import site.generator.StreetGenerator;
+import site.generator.SubdivisionGenerator;
 import wblut.processing.WB_Render;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * commercial street
@@ -24,6 +23,35 @@ import java.util.List;
  */
 public class CommercialStreet extends PApplet {
 
+    private final static double[] stats = new double[]{
+            1,  // 全局缩放比例
+            7,  // 动线初始宽度
+            8,  // 小店铺宽度
+            8,  // 中庭宽度
+            2.4,  //中庭两侧走道宽度
+            50,  // 扶梯服务半径
+    };
+
+    public void setStats() {
+        TrafficNode.setOriginalRegionR(stats[1] * 0.5);
+        Atrium.setCorridorWidth(stats[3]);
+        Escalator.setServiceRadius(stats[4]);
+    }
+
+    private final static String path = "E:\\AAA_Study\\202010_HuaianUrbanDesign\\codefiles\\20201224site.3dm";
+    private final Importer site = new Importer();
+    private final Exporter exporter = new Exporter();
+
+    private boolean streetAdjust = true;
+
+    private StreetGenerator streetGenerator;
+    private SubdivisionGenerator subdivisionGenerator;
+    private BuildingGenerator buildingGenerator;
+
+    private CameraController gcam;
+    private WB_Render render;
+    private JtsRender jtsRender;
+
     /* ------------- settings ------------- */
 
     public void settings() {
@@ -32,36 +60,30 @@ public class CommercialStreet extends PApplet {
 
     /* ------------- setup ------------- */
 
-    private final static String path = "E:\\AAA_Study\\202010_HuaianUrbanDesign\\20201129\\1129.3dm";
-    private final InputSite site = new InputSite();
-
-    private StreetGenerator streetGenerator;
-    private Subdivision divider;
-
-    private CameraController gcam;
-    private WB_Render render;
-    private JtsRender jtsRender;
-
     public void setup() {
-        gcam = new CameraController(this);
+        gcam = new CameraController(this, 100);
         gcam.top();
         render = new WB_Render(this);
         jtsRender = new JtsRender(this);
 
-        site.loadData(path);
-        streetGenerator = new StreetGenerator(site);
-
+        this.site.loadData(path);
+        this.streetGenerator = new StreetGenerator(site);
     }
 
     /* ------------- draw ------------- */
 
     public void draw() {
         background(255);
+        ambientLight(200,200,200);
+        directionalLight(150, 150, 150, 1, 1, -1);
         gcam.drawSystem(1000);
 
         streetGenerator.display(jtsRender, render, this);
-        if (divider != null) {
-            divider.display(render);
+        if (subdivisionGenerator != null) {
+            subdivisionGenerator.display(render, this);
+        }
+        if (buildingGenerator != null) {
+            buildingGenerator.display(render, this);
         }
     }
 
@@ -71,29 +93,32 @@ public class CommercialStreet extends PApplet {
     private double[] pointer;
 
     public void mouseClicked() {
-//        System.out.println(Arrays.toString(gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0)));
-//        System.out.println(
-//                (gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0)[0] + width * 0.5)
-//                        + " "
-//                        + (gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0)[1] + height * 0.5)
-//        );
-//        System.out.println(
-//                (gcam.pick3dDouble(mouseX, mouseY, 0)[0] + width * 0.5)
-//                        + " "
-//                        + (gcam.pick3dDouble(mouseX, mouseY, 0)[1] + height * 0.5)
-//        );
-        System.out.println(Arrays.toString(gcam.pick3d(mouseX, mouseY)));
+        if (!streetAdjust) {
+            if (mouseButton == LEFT) {
+                pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+                subdivisionGenerator.setSelected(
+                        (pointer[0] + width * 0.5),
+                        (pointer[1] + height * 0.5)
+                );
+            }
+            if (mouseButton == RIGHT) {
+                subdivisionGenerator.clearSelected();
+            }
+        }
     }
 
     public void mouseDragged() {
-        if (mouseButton == RIGHT) {
-            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-            // drag a node of traffic graph
-            streetGenerator.dragUpdate(
-                    (int) (pointer[0] + width * 0.5),
-                    (int) (pointer[1] + height * 0.5)
-            );
-            streetGenerator.setGraphSwitch(false);
+        if (streetAdjust) {
+            if (mouseButton == RIGHT) {
+                pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+                // drag a node of traffic graph
+
+                streetGenerator.dragUpdate(
+                        (int) (pointer[0] + width * 0.5),
+                        (int) (pointer[1] + height * 0.5)
+                );
+                streetGenerator.setGraphSwitch(false);
+            }
         }
     }
 
@@ -102,6 +127,17 @@ public class CommercialStreet extends PApplet {
     }
 
     public void keyPressed() {
+        // generator control
+        if (key == ',') {
+            streetAdjust = !streetAdjust;
+            if (!streetAdjust) {
+                this.subdivisionGenerator = new SubdivisionGenerator(
+                        streetGenerator.getSiteBlocks(),
+                        streetGenerator.getTrafficBlocks()
+                );
+            }
+        }
+
         // display control
         if (key == 'p' || key == 'P') {
             gcam.perspective();
@@ -110,15 +146,34 @@ public class CommercialStreet extends PApplet {
             gcam.top();
         }
 
-        if (key == '0') {
-            divider = new Subdivision(streetGenerator.getBlockAsArray());
+
+        if (key == '1') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.performSideStrip();
+                subdivisionGenerator.clearSelected();
+            }
+        }
+        if (key == '2') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.performOBB();
+                subdivisionGenerator.clearSelected();
+            }
+        }
+        if (key == '.') {
+            buildingGenerator = new BuildingGenerator(subdivisionGenerator);
+        }
+        if (streetAdjust) {
+            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+            streetGenerator.keyUpdate(
+                    (int) (pointer[0] + width * 0.5),
+                    (int) (pointer[1] + height * 0.5),
+                    this
+            );
+            streetGenerator.setGraphSwitch(false);
         }
 
-        pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-        streetGenerator.keyUpdate(
-                (int) (pointer[0] + width * 0.5),
-                (int) (pointer[1] + height * 0.5),
-                this
-        );
+        if (key == '-') {
+
+        }
     }
 }

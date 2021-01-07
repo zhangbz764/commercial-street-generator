@@ -1,9 +1,6 @@
 package main;
 
-import Guo_Cam.CameraController;
 import processing.core.PApplet;
-import site.InputSite;
-import wblut.processing.WB_Render;
 
 /**
  * commercial street main
@@ -16,5 +13,6 @@ import wblut.processing.WB_Render;
 public class StreetMain extends PApplet {
     public static void main(String[] args) {
         PApplet.main("main.CommercialStreet");
+//        PApplet.main("main.TestBuilding");
     }
 }
