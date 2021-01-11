@@ -26,7 +26,7 @@ public class BasicBuilding {
     private ZPoint buildingDir = new ZPoint(0, 1);
 
     private int storey = 2; // 层数
-    private double storeyHeight = 2; // 层高
+    private double storeyHeight = 3; // 层高
 
     private WB_Polygon base; // must be rectangle
 
@@ -37,7 +37,7 @@ public class BasicBuilding {
 
     private List<WB_Polygon> roof;
     private double roofAngle = Math.PI / 7;
-    private double roofBuffferDist = 1;
+    private double roofBufferDist = 1;
 
     private List<WB_Polygon> allSurfaces;
 
@@ -57,6 +57,24 @@ public class BasicBuilding {
     public BasicBuilding(WB_Polygon buildingSite) {
         setBuildCenter(buildingSite);
         this.base = buildingSite;
+        this.area = Math.abs(base.getSignedArea());
+
+        initBuilding();
+    }
+
+    public BasicBuilding(WB_Polygon buildingSite, int storey) {
+        setBuildCenter(buildingSite);
+        this.base = buildingSite;
+        this.storey = storey;
+        this.area = Math.abs(base.getSignedArea());
+
+        initBuilding();
+    }
+
+    public BasicBuilding(WB_Polygon buildingSite, double storeyHeight) {
+        setBuildCenter(buildingSite);
+        this.base = buildingSite;
+        this.storeyHeight = storeyHeight;
         this.area = Math.abs(base.getSignedArea());
 
         initBuilding();
@@ -99,7 +117,7 @@ public class BasicBuilding {
                 base.getPoint(3)
         });
 
-        calculateRoof();
+        setRoof();
 
         this.allSurfaces = new ArrayList<>();
         allSurfaces.add(base);
@@ -108,7 +126,6 @@ public class BasicBuilding {
         allSurfaces.add(back);
         allSurfaces.add(left);
         allSurfaces.addAll(roof);
-
     }
 
     /**
@@ -116,39 +133,43 @@ public class BasicBuilding {
      *
      * @return void
      */
-    private void calculateRoof() {
+    private void setRoof() {
         this.roof = new ArrayList<>();
         // buffered boundary for roof
         WB_Polygon roofBoundary = ZGeoMath.polygonFaceUp(
                 ZTransform.validateWB_Polygon(
-                        ZGeoFactory.wbgf.createBufferedPolygonsStraight2D(base, roofBuffferDist).get(0)
+                        ZGeoFactory.wbgf.createBufferedPolygonsStraight2D(base, roofBufferDist).get(0)
                 )
         );
         // find two ridge points
         WB_Point ridgeRight = new WB_Point(
                 (roofBoundary.getPoint(1).xd() + roofBoundary.getPoint(2).xd()) * 0.5,
                 (roofBoundary.getPoint(1).yd() + roofBoundary.getPoint(2).yd()) * 0.5,
-                storey * storeyHeight + Math.tan(roofAngle) * (roofBoundary.getSegment(1).getLength() * 0.5 - roofBuffferDist)
+                storey * storeyHeight + Math.tan(roofAngle) * (roofBoundary.getSegment(1).getLength() * 0.5 - roofBufferDist)
         );
         WB_Point ridgeLeft = new WB_Point(
                 (roofBoundary.getPoint(3).xd() + roofBoundary.getPoint(0).xd()) * 0.5,
                 (roofBoundary.getPoint(3).yd() + roofBoundary.getPoint(0).yd()) * 0.5,
-                storey * storeyHeight + Math.tan(roofAngle) * (roofBoundary.getSegment(3).getLength() * 0.5 - roofBuffferDist)
+                storey * storeyHeight + Math.tan(roofAngle) * (roofBoundary.getSegment(3).getLength() * 0.5 - roofBufferDist)
         );
 
         // front slope
+        WB_Point firstP1 = new WB_Point(roofBoundary.getPoint(0).xd(), roofBoundary.getPoint(0).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBufferDist);
         roof.add(new WB_Polygon(
-                new WB_Point(roofBoundary.getPoint(0).xd(), roofBoundary.getPoint(0).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBuffferDist),
-                new WB_Point(roofBoundary.getPoint(1).xd(), roofBoundary.getPoint(1).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBuffferDist),
+                firstP1,
+                new WB_Point(roofBoundary.getPoint(1).xd(), roofBoundary.getPoint(1).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBufferDist),
                 ridgeRight,
-                ridgeLeft
+                ridgeLeft,
+                firstP1
         ));
         // back slope
+        WB_Point firstP2 = new WB_Point(roofBoundary.getPoint(2).xd(), roofBoundary.getPoint(2).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBufferDist);
         roof.add(new WB_Polygon(
-                new WB_Point(roofBoundary.getPoint(2).xd(), roofBoundary.getPoint(2).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBuffferDist),
-                new WB_Point(roofBoundary.getPoint(3).xd(), roofBoundary.getPoint(3).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBuffferDist),
+                firstP2,
+                new WB_Point(roofBoundary.getPoint(3).xd(), roofBoundary.getPoint(3).yd(), storey * storeyHeight - Math.tan(roofAngle) * roofBufferDist),
                 ridgeLeft,
-                ridgeRight
+                ridgeRight,
+                firstP2
         ));
     }
 

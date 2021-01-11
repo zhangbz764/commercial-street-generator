@@ -75,24 +75,24 @@ public class Importer {
         IPoint[] entries1 = IG.layer("entry1").points();
         this.inputEntries1 = new WB_Point[entries1.length];
         for (int i = 0; i < entries1.length; i++) {
-            inputEntries1[i] = ZTransform.IPointToWB(entries1[i], scale);
+            inputEntries1[i] = ZTransform.IPointToWB_Point(entries1[i], scale);
         }
         IPoint[] entries2 = IG.layer("entry2").points();
         this.inputEntries2 = new WB_Point[entries2.length];
         for (int i = 0; i < entries2.length; i++) {
-            inputEntries2[i] = ZTransform.IPointToWB(entries2[i], scale);
+            inputEntries2[i] = ZTransform.IPointToWB_Point(entries2[i], scale);
         }
 
         // load inner nodes
         IPoint[] inners1 = IG.layer("inner1").points();
         this.inputInnerNodes1 = new WB_Point[inners1.length];
         for (int i = 0; i < inners1.length; i++) {
-            inputInnerNodes1[i] = ZTransform.IPointToWB(inners1[i], scale);
+            inputInnerNodes1[i] = ZTransform.IPointToWB_Point(inners1[i], scale);
         }
         IPoint[] inners2 = IG.layer("inner2").points();
         this.inputInnerNodes2 = new WB_Point[inners2.length];
         for (int i = 0; i < inners2.length; i++) {
-            inputInnerNodes2[i] = ZTransform.IPointToWB(inners2[i], scale);
+            inputInnerNodes2[i] = ZTransform.IPointToWB_Point(inners2[i], scale);
         }
 
         // load boundary polygon

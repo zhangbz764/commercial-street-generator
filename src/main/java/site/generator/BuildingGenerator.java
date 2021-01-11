@@ -40,6 +40,10 @@ public class BuildingGenerator {
         }
     }
 
+    public List<SimpleShop> getAllSimpleShops() {
+        return allSimpleShops;
+    }
+
     /* ------------- draw ------------- */
 
     public void display(WB_Render render, PApplet app) {

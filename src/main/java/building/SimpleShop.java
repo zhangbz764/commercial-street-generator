@@ -91,7 +91,7 @@ public class SimpleShop {
     private void setBuildings(List<WB_Polygon> buildingBases) {
         this.buildings = new ArrayList<>();
         for (WB_Polygon base : buildingBases) {
-            buildings.add(new BasicBuilding(base));
+            buildings.add(new BasicBuilding(base, ZMath.randomInt(2, 3.5)));
         }
     }
 

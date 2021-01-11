@@ -1,9 +1,6 @@
 package main;
 
 import Guo_Cam.CameraController;
-import formInteractive.graphAdjusting.TrafficNode;
-import formInteractive.graphAdjusting.spacialElements.Atrium;
-import formInteractive.graphAdjusting.spacialElements.Escalator;
 import processing.core.PApplet;
 import render.JtsRender;
 import site.Exporter;
@@ -22,25 +19,19 @@ import wblut.processing.WB_Render;
  * @time 11:32
  */
 public class CommercialStreet extends PApplet {
-
-    private final static double[] stats = new double[]{
-            1,  // 全局缩放比例
-            7,  // 动线初始宽度
-            8,  // 小店铺宽度
-            8,  // 中庭宽度
-            2.4,  //中庭两侧走道宽度
-            50,  // 扶梯服务半径
-    };
-
     public void setStats() {
-        TrafficNode.setOriginalRegionR(stats[1] * 0.5);
-        Atrium.setCorridorWidth(stats[3]);
-        Escalator.setServiceRadius(stats[4]);
+        MallConstant.MAIN_TRAFFIC_WIDTH = 7; // 主动线初始宽度
+        MallConstant.SIMPLE_SHOP_WIDTH = 12; // 小店铺宽度
+
+        MallConstant.ATRIUM_WIDTH = 6; // 中庭宽度
+        MallConstant.ATRIUM_CORRIDOR_WIDTH = 2; //中庭两侧走道宽度
     }
 
-    private final static String path = "E:\\AAA_Study\\202010_HuaianUrbanDesign\\codefiles\\20201224site.3dm";
+    private final static String inputPath = "E:\\AAA_Study\\202010_HuaianUrbanDesign\\codefiles\\20201224site.3dm";
+    private final static String outputPath = "E:\\AAA_Study\\202010_HuaianUrbanDesign\\codefiles\\outputTest20200110.3dm";
+
     private final Importer site = new Importer();
-    private final Exporter exporter = new Exporter();
+    private Exporter exporter;
 
     private boolean streetAdjust = true;
 
@@ -66,7 +57,7 @@ public class CommercialStreet extends PApplet {
         render = new WB_Render(this);
         jtsRender = new JtsRender(this);
 
-        this.site.loadData(path);
+        this.site.loadData(inputPath);
         this.streetGenerator = new StreetGenerator(site);
     }
 
@@ -74,7 +65,7 @@ public class CommercialStreet extends PApplet {
 
     public void draw() {
         background(255);
-        ambientLight(200,200,200);
+        ambientLight(200, 200, 200);
         directionalLight(150, 150, 150, 1, 1, -1);
         gcam.drawSystem(1000);
 
@@ -146,6 +137,15 @@ public class CommercialStreet extends PApplet {
             gcam.top();
         }
 
+        if (streetAdjust) {
+            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+            streetGenerator.keyUpdate(
+                    (int) (pointer[0] + width * 0.5),
+                    (int) (pointer[1] + height * 0.5),
+                    this
+            );
+            streetGenerator.setGraphSwitch(false);
+        }
 
         if (key == '1') {
             if (subdivisionGenerator != null) {
@@ -159,21 +159,32 @@ public class CommercialStreet extends PApplet {
                 subdivisionGenerator.clearSelected();
             }
         }
+        if (key == '3') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.performSingleStrip();
+                subdivisionGenerator.clearSelected();
+            }
+        }
+        if (key == '4') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.performDoubleStrip();
+                subdivisionGenerator.clearSelected();
+            }
+        }
+        if (key == '`') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.performDoubleStrip();
+                subdivisionGenerator.clearSelected();
+            }
+        }
+
         if (key == '.') {
             buildingGenerator = new BuildingGenerator(subdivisionGenerator);
         }
-        if (streetAdjust) {
-            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-            streetGenerator.keyUpdate(
-                    (int) (pointer[0] + width * 0.5),
-                    (int) (pointer[1] + height * 0.5),
-                    this
-            );
-            streetGenerator.setGraphSwitch(false);
-        }
 
         if (key == '-') {
-
+            this.exporter = new Exporter(streetGenerator, subdivisionGenerator, buildingGenerator);
+            exporter.save(outputPath);
         }
     }
 }

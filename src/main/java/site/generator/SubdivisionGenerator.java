@@ -1,11 +1,11 @@
 package site.generator;
 
-import building.SimpleShop;
+import main.MallConstant;
 import math.ZGeoMath;
-import org.locationtech.jts.algorithm.MinimumDiameter;
 import processing.core.PApplet;
 import subdivision.ZSD_OBB;
 import subdivision.ZSD_SideStrip;
+import subdivision.ZSD_SkeVorStrip;
 import transform.ZTransform;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
@@ -26,7 +26,9 @@ import java.util.List;
 public class SubdivisionGenerator {
     private List<List<WB_Polygon>> allSitesToSub;
     private List<WB_Polygon> trafficBlocks;
+    private List<WB_Polygon> subTrafficBlocks;
 
+    // record selected operation
     private WB_Polygon selected;
     private int selectIndex = -1;
 
@@ -35,6 +37,7 @@ public class SubdivisionGenerator {
     // type of results
     private List<WB_Polygon> invalidSites;
     private List<WB_Polygon> simpleShopSites;
+    private List<WB_Polygon> midShopSites;
 
 
     /* ------------- constructor ------------- */
@@ -44,7 +47,10 @@ public class SubdivisionGenerator {
         setTrafficBlocks(traffic);
         this.invalidSites = new ArrayList<>();
         this.simpleShopSites = new ArrayList<>();
+        this.midShopSites = new ArrayList<>();
         this.divideResults = new ArrayList<>();
+
+        this.subTrafficBlocks = new ArrayList<>();
     }
 
     /* ------------- member function ------------- */
@@ -91,12 +97,14 @@ public class SubdivisionGenerator {
 
             // perform subdivide
             ZSD_SideStrip side = new ZSD_SideStrip(valid);
+            side.randomMode = true;
             side.setOffsetIndices(indices);
+            side.setSpan(MallConstant.SIMPLE_SHOP_WIDTH);
+            side.setOffsetDist(-15);
             side.performDivide();
             divideResults.add(side.getAllSubPolygons());
 
             sortSubdivision(side.getAllSubPolygons());
-
             allSitesToSub.get(selectIndex).remove(selected);
         }
     }
@@ -108,6 +116,7 @@ public class SubdivisionGenerator {
      */
     public void performOBB() {
         if (this.selected != null && this.selectIndex != -1) {
+            // perform subdivide
             ZSD_OBB obb = new ZSD_OBB(selected);
             obb.setCellConstraint(1);
             obb.performDivide();
@@ -116,21 +125,68 @@ public class SubdivisionGenerator {
         }
     }
 
-//    public void performSingleStrip() {
-//
-//
-//        this.divideResults = new ArrayList<>();
-//        ZSubdivision[] subdivisions = new ZSubdivision[allSites.size()];
-//
-//        for (int i = 0; i < allSites.size(); i++) {
-//            subdivisions[i] = new ZSD_SingleStrip(ZGeoMath.polygonFaceUp(allSites.get(i)));
-//            subdivisions[i].setCellConstraint(10);
-//            subdivisions[i].performDivide();
-//            divideResults.add(subdivisions[i].getAllSubPolygons());
-//        }
-//    }
+    /**
+     * perform single strip subdivide, divide the site into slices
+     *
+     * @return void
+     */
+    public void performSingleStrip() {
+        if (this.selected != null && this.selectIndex != -1) {
+            WB_Polygon valid = ZGeoMath.polygonFaceUp(ZTransform.validateWB_Polygon(selected));
+            // perform subdivide
+            ZSD_SkeVorStrip skeVor = new ZSD_SkeVorStrip(valid);
+            skeVor.setSpan(MallConstant.MID_SHOP_WIDTH);
+            skeVor.performDivide();
+            sortSubdivision(skeVor.getAllSubPolygons());
+            allSitesToSub.get(selectIndex).remove(selected);
+        }
+    }
 
+    /**
+     * perform double strip subdivide, divide the site into two series of slices
+     *
+     * @return void
+     */
+    public void performDoubleStrip() {
+        if (this.selected != null && this.selectIndex != -1) {
+            WB_Polygon valid = ZGeoMath.polygonFaceUp(ZTransform.validateWB_Polygon(selected));
+            // perform subdivide
+            ZSD_SkeVorStrip skeVor = new ZSD_SkeVorStrip(valid);
+            skeVor.setSpan(MallConstant.MID_SHOP_WIDTH);
+            skeVor.setDepth(6);
+            skeVor.performDivide();
+            sortSubdivision(skeVor.getAllSubPolygons());
+            allSitesToSub.get(selectIndex).remove(selected);
+        }
+    }
 
+    /**
+     * add sub traffic graph in the selected block
+     *
+     * @param
+     * @return void
+     */
+    public void addSubGraph() {
+        if (this.selected != null && this.selectIndex != -1) {
+            WB_Polygon valid = ZGeoMath.polygonFaceUp(ZTransform.validateWB_Polygon(selected));
+            SubStreetGenerator subStreetGenerator = new SubStreetGenerator(valid);
+        }
+    }
+
+    public void confirmSubGraph(){
+
+    }
+
+    public void undo() {
+
+    }
+
+    /**
+     * sort sites by its area
+     *
+     * @param allInitSubPolygons initial sub polygons
+     * @return void
+     */
     private void sortSubdivision(List<WB_Polygon> allInitSubPolygons) {
         for (WB_Polygon polygon : allInitSubPolygons) {
             double area = Math.abs(polygon.getSignedArea());
@@ -138,6 +194,8 @@ public class SubdivisionGenerator {
                 invalidSites.add(polygon);
             } else if (area >= 50 && area < 400) {
                 simpleShopSites.add(polygon);
+            } else if (area >= 400 && area < 750) {
+                midShopSites.add(polygon);
             } else {
                 if (this.selected != null && this.selectIndex != -1) {
                     allSitesToSub.get(selectIndex).add(polygon);
@@ -162,6 +220,10 @@ public class SubdivisionGenerator {
 
     public List<WB_Polygon> getSimpleShopSites() {
         return simpleShopSites;
+    }
+
+    public List<WB_Polygon> getMidShopSites() {
+        return midShopSites;
     }
 
     /* ------------- interaction ------------- */
@@ -217,15 +279,15 @@ public class SubdivisionGenerator {
         for (WB_Polygon p : simpleShopSites) {
             render.drawPolygonEdges2D(p);
         }
+        app.fill(188, 80, 45);
+        for (WB_Polygon p : midShopSites) {
+            render.drawPolygonEdges2D(p);
+        }
         app.noFill();
-//        for (int i = 0; i < divideResults.size(); i++) {
-//            for (int j = 0; j < divideResults.get(i).size(); j++) {
-//                render.drawPolygonEdges2D(divideResults.get(i).get(j));
-//            }
-//        }
+
         if (selected != null) {
             app.stroke(0, 0, 255);
-            app.strokeWeight(3);
+            app.strokeWeight(4);
             render.drawPolygonEdges2D(selected);
         }
         app.popStyle();

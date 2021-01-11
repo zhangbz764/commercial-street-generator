@@ -6,6 +6,7 @@ import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
 import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
+import main.MallConstant;
 import processing.core.PApplet;
 import render.JtsRender;
 import site.Importer;
@@ -28,41 +29,43 @@ import java.util.List;
 public class StreetGenerator {
     private Importer inputSite;
     private TrafficGraph[] trafficGraph;
+    private TrafficGraph[] subTrafficGraph;
+
     private Split[] blockSplit;
 
     /* ------------- constructor ------------- */
 
     public StreetGenerator(Importer inputSite) {
+        this.inputSite = inputSite;
         init(inputSite);
     }
 
     /* ------------- initializer ------------- */
 
     public void init(Importer inputSite) {
-        this.inputSite = inputSite;
         List<TrafficNode> innerNodes1 = new ArrayList<>();
         for (WB_Point p : this.inputSite.getInputInnerNodes1()) {
             TrafficNode treeNode = new TrafficNodeTree(p, this.inputSite.getInputBoundaries()[0]);
-            treeNode.setRegionR(6);
+            treeNode.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5);
             innerNodes1.add(treeNode);
         }
         List<TrafficNode> entryNodes1 = new ArrayList<>();
         for (WB_Point p : this.inputSite.getInputEntries1()) {
             TrafficNode fixedNode = new TrafficNodeFixed(p, this.inputSite.getInputBoundaries()[0]);
-            fixedNode.setRegionR(6);
+            fixedNode.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5);
             entryNodes1.add(fixedNode);
         }
 
         List<TrafficNode> innerNodes2 = new ArrayList<>();
         for (WB_Point p : this.inputSite.getInputInnerNodes2()) {
             TrafficNode treeNode = new TrafficNodeTree(p, this.inputSite.getInputBoundaries()[1]);
-            treeNode.setRegionR(6);
+            treeNode.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5);
             innerNodes2.add(treeNode);
         }
         List<TrafficNode> entryNodes2 = new ArrayList<>();
         for (WB_Point p : this.inputSite.getInputEntries2()) {
             TrafficNode fixedNode = new TrafficNodeFixed(p, this.inputSite.getInputBoundaries()[1]);
-            fixedNode.setRegionR(6);
+            fixedNode.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5);
             entryNodes2.add(fixedNode);
         }
 
