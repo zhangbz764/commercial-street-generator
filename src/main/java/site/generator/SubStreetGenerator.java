@@ -4,9 +4,13 @@ import formInteractive.blockSplit.Split;
 import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
+import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
+import main.MallConstant;
 import processing.core.PApplet;
+import render.JtsRender;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +39,11 @@ public class SubStreetGenerator {
 
     public void init() {
         List<TrafficNode> treeNodes = new ArrayList<>();
-        treeNodes.add(new TrafficNodeTree(subSite.getCenter(), subSite));
+        TrafficNode treeNode = new TrafficNodeTree(subSite.getCenter(), subSite);
+        treeNode.setRegionR(MallConstant.SUB_TRAFFIC_WIDTH * 0.5);
+        treeNodes.add(treeNode);
         this.subGraph = new TrafficGraph(treeNodes, new ArrayList<TrafficNode>());
+
         subBlockSplit = new SplitBisector(subSite, subGraph);
     }
 
@@ -93,7 +100,9 @@ public class SubStreetGenerator {
     public void keyUpdate(int pointerX, int pointerY, PApplet app) {
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
-            subGraph.addTreeNode(pointerX, pointerY, subSite);
+            TrafficNode treeNode = new TrafficNodeTree(pointerX, pointerY, subSite);
+            treeNode.setRegionR(MallConstant.SUB_TRAFFIC_WIDTH * 0.5);
+            subGraph.addTreeNode(treeNode, subSite);
             subBlockSplit.init(subSite, subGraph);
         }
         // remove a TrafficNode to graph (mouse location)
@@ -103,7 +112,10 @@ public class SubStreetGenerator {
         }
         // add a fixed TrafficNode to graph 1
         if (app.key == 'q' || app.key == 'Q') {
-            subGraph.addFixedNode(pointerX, pointerY, subSite);
+            TrafficNode fixedNode = new TrafficNodeFixed(pointerX, pointerY, subSite);
+            fixedNode.setRegionR(MallConstant.SUB_TRAFFIC_WIDTH * 0.5);
+            fixedNode.setByRestriction(pointerX, pointerY);
+            subGraph.addFixedNode(fixedNode);
             subBlockSplit.init(subSite, subGraph);
         }
         // remove a fixed TrafficNode to graph (mouse location)
@@ -124,4 +136,19 @@ public class SubStreetGenerator {
     }
 
     /* ------------- draw ------------- */
+
+    public void display(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+        app.pushStyle();
+        displaySplit(jtsRender, app);
+        displayGraph(render, app);
+        app.popStyle();
+    }
+
+    private void displayGraph(WB_Render3D render, PApplet app) {
+        subGraph.display(render, app);
+    }
+
+    private void displaySplit(JtsRender jtsRender, PApplet app) {
+        subBlockSplit.display(jtsRender, app);
+    }
 }

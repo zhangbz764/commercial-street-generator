@@ -20,11 +20,12 @@ import wblut.processing.WB_Render;
  */
 public class CommercialStreet extends PApplet {
     public void setStats() {
-        MallConstant.MAIN_TRAFFIC_WIDTH = 7; // 主动线初始宽度
+        MallConstant.MAIN_TRAFFIC_WIDTH = 12; // 主动线初始宽度
+        MallConstant.SUB_TRAFFIC_WIDTH = 7; // 主动线初始宽度
         MallConstant.SIMPLE_SHOP_WIDTH = 12; // 小店铺宽度
 
-        MallConstant.ATRIUM_WIDTH = 6; // 中庭宽度
-        MallConstant.ATRIUM_CORRIDOR_WIDTH = 2; //中庭两侧走道宽度
+        MallConstant.ATRIUM_WIDTH = 9.6; // 中庭宽度
+        MallConstant.ATRIUM_CORRIDOR_WIDTH = 2.8; //中庭两侧走道宽度
     }
 
     private final static String inputPath = "E:\\AAA_Study\\202010_HuaianUrbanDesign\\codefiles\\20201224site.3dm";
@@ -34,6 +35,8 @@ public class CommercialStreet extends PApplet {
     private Exporter exporter;
 
     private boolean streetAdjust = true;
+    private boolean subdivisionAdjust = false;
+    private boolean finalDisplay = false;
 
     private StreetGenerator streetGenerator;
     private SubdivisionGenerator subdivisionGenerator;
@@ -46,12 +49,13 @@ public class CommercialStreet extends PApplet {
     /* ------------- settings ------------- */
 
     public void settings() {
-        size(1800, 1000, P3D);
+        size(1920, 1080, P3D);
     }
 
     /* ------------- setup ------------- */
 
     public void setup() {
+        setStats();
         gcam = new CameraController(this, 100);
         gcam.top();
         render = new WB_Render(this);
@@ -64,17 +68,30 @@ public class CommercialStreet extends PApplet {
     /* ------------- draw ------------- */
 
     public void draw() {
-        background(255);
-        ambientLight(200, 200, 200);
+        background(30);
+        ambientLight(150, 150, 150);
         directionalLight(150, 150, 150, 1, 1, -1);
         gcam.drawSystem(1000);
 
-        streetGenerator.display(jtsRender, render, this);
-        if (subdivisionGenerator != null) {
-            subdivisionGenerator.display(render, this);
-        }
-        if (buildingGenerator != null) {
-            buildingGenerator.display(render, this);
+        if (!finalDisplay) {
+            streetGenerator.display(jtsRender, render, this);
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.display(jtsRender, render, this);
+            }
+            if (buildingGenerator != null) {
+                buildingGenerator.display(render, this);
+            }
+        } else {
+            streetGenerator.finalDisplay(jtsRender, render, this);
+            pushMatrix();
+            translate(0, 0, 0.01f);
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.finalDisplay(jtsRender, render, this);
+            }
+            popMatrix();
+            if (buildingGenerator != null) {
+                buildingGenerator.finalDisplay(render, this);
+            }
         }
     }
 
@@ -91,6 +108,12 @@ public class CommercialStreet extends PApplet {
                         (pointer[0] + width * 0.5),
                         (pointer[1] + height * 0.5)
                 );
+                if (subdivisionAdjust) {
+                    subdivisionGenerator.setSelected2(
+                            (pointer[0] + width * 0.5),
+                            (pointer[1] + height * 0.5)
+                    );
+                }
             }
             if (mouseButton == RIGHT) {
                 subdivisionGenerator.clearSelected();
@@ -103,38 +126,49 @@ public class CommercialStreet extends PApplet {
             if (mouseButton == RIGHT) {
                 pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
                 // drag a node of traffic graph
-
                 streetGenerator.dragUpdate(
                         (int) (pointer[0] + width * 0.5),
                         (int) (pointer[1] + height * 0.5)
                 );
                 streetGenerator.setGraphSwitch(false);
             }
+        } else {
+            if (mouseButton == RIGHT) {
+                pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+                if (subdivisionGenerator != null) {
+                    subdivisionGenerator.updateMouseSubGraph(
+                            (int) (pointer[0] + width * 0.5),
+                            (int) (pointer[1] + height * 0.5)
+                    );
+                }
+            }
         }
     }
 
     public void mouseReleased() {
-        streetGenerator.releaseUpdate();
+        if (streetAdjust) {
+            streetGenerator.releaseUpdate();
+        } else {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.updateReleaseSubGraph();
+            }
+        }
     }
 
     public void keyPressed() {
         // generator control
-        if (key == ',') {
+        if (key == '0') {
             streetAdjust = !streetAdjust;
             if (!streetAdjust) {
-                this.subdivisionGenerator = new SubdivisionGenerator(
+                this.subdivisionGenerator = new SubdivisionGenerator();
+                subdivisionGenerator.init(
                         streetGenerator.getSiteBlocks(),
                         streetGenerator.getTrafficBlocks()
                 );
+            } else {
+                this.subdivisionGenerator = new SubdivisionGenerator();
+                this.buildingGenerator = null;
             }
-        }
-
-        // display control
-        if (key == 'p' || key == 'P') {
-            gcam.perspective();
-        }
-        if (key == 't' || key == 'T') {
-            gcam.top();
         }
 
         if (streetAdjust) {
@@ -145,8 +179,28 @@ public class CommercialStreet extends PApplet {
                     this
             );
             streetGenerator.setGraphSwitch(false);
+        } else {
+            if (subdivisionGenerator != null) {
+                pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+                subdivisionGenerator.updateKeySubGraph(
+                        (int) (pointer[0] + width * 0.5),
+                        (int) (pointer[1] + height * 0.5),
+                        this
+                );
+            }
         }
 
+        // display control
+        if (key == 'p' || key == 'P') {
+            gcam.perspective();
+            finalDisplay = true;
+        }
+        if (key == 't' || key == 'T') {
+            gcam.top();
+            finalDisplay = false;
+        }
+
+        // subdivision
         if (key == '1') {
             if (subdivisionGenerator != null) {
                 subdivisionGenerator.performSideStrip();
@@ -171,17 +225,35 @@ public class CommercialStreet extends PApplet {
                 subdivisionGenerator.clearSelected();
             }
         }
-        if (key == '`') {
+        if (key == '/') {
             if (subdivisionGenerator != null) {
-                subdivisionGenerator.performDoubleStrip();
-                subdivisionGenerator.clearSelected();
+                subdivisionGenerator.addSubGraph();
+            }
+        }
+        if (key == '*') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.confirmSubGraph();
+            }
+        }
+        if (key == '5') {
+            subdivisionAdjust = true;
+        }
+        if (key == '6') {
+            if (subdivisionGenerator != null) {
+                subdivisionGenerator.union();
+                subdivisionAdjust = false;
             }
         }
 
-        if (key == '.') {
+        // buildings
+        if (key == ',') {
             buildingGenerator = new BuildingGenerator(subdivisionGenerator);
         }
+        if (key == '.') {
+            buildingGenerator.initAllBuildings();
+        }
 
+        // export
         if (key == '-') {
             this.exporter = new Exporter(streetGenerator, subdivisionGenerator, buildingGenerator);
             exporter.save(outputPath);

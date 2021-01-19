@@ -1,5 +1,6 @@
 package site.generator;
 
+import building.AnchorShop;
 import building.SimpleShop;
 import processing.core.PApplet;
 import wblut.geom.WB_Polygon;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * description
+ * generate buildings in the commercial street
  *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
@@ -18,6 +19,7 @@ import java.util.List;
  */
 public class BuildingGenerator {
     private List<SimpleShop> allSimpleShops;
+    private List<AnchorShop> allAnchorShops;
 
     /* ------------- constructor ------------- */
 
@@ -28,15 +30,44 @@ public class BuildingGenerator {
     /* ------------- member function ------------- */
 
     public void init(SubdivisionGenerator subdivisionGenerator) {
-        setAllSimpleShops(subdivisionGenerator.getSimpleShopSites());
+        setAllSimpleShops(subdivisionGenerator);
+        setAllAnchorShops(subdivisionGenerator);
+    }
+
+    public void initAllBuildings() {
+        for (SimpleShop simpleShop : allSimpleShops) {
+            simpleShop.initBuildings();
+        }
+        for (AnchorShop anchorShop : allAnchorShops) {
+            anchorShop.initBuildings();
+        }
     }
 
     /* ------------- getter & setter ------------- */
 
-    public void setAllSimpleShops(List<WB_Polygon> allSimpleShopSites) {
+    public void setAllSimpleShops(SubdivisionGenerator subdivisionGenerator) {
         this.allSimpleShops = new ArrayList<>();
-        for (WB_Polygon site : allSimpleShopSites) {
-            allSimpleShops.add(new SimpleShop(site));
+        for (WB_Polygon site : subdivisionGenerator.getSimpleShopSites()) {
+            allSimpleShops.add(
+                    new SimpleShop(
+                            site,
+                            subdivisionGenerator.getTrafficBlocks(),
+                            subdivisionGenerator.getSubTrafficBlocks()
+                    )
+            );
+        }
+    }
+
+    public void setAllAnchorShops(SubdivisionGenerator subdivisionGenerator) {
+        this.allAnchorShops = new ArrayList<>();
+        for (WB_Polygon site : subdivisionGenerator.getAnchorShopSites()) {
+            allAnchorShops.add(
+                    new AnchorShop(
+                            site,
+                            subdivisionGenerator.getTrafficBlocks(),
+                            subdivisionGenerator.getSubTrafficBlocks()
+                    )
+            );
         }
     }
 
@@ -44,12 +75,32 @@ public class BuildingGenerator {
         return allSimpleShops;
     }
 
+    public List<AnchorShop> getAllAnchorShops() {
+        return allAnchorShops;
+    }
+
     /* ------------- draw ------------- */
 
     public void display(WB_Render render, PApplet app) {
         app.pushStyle();
         for (SimpleShop simpleShop : allSimpleShops) {
-            simpleShop.display(render, app);
+            simpleShop.displaySite(render, app);
+            simpleShop.displayBuilding(render, app);
+        }
+        for (AnchorShop anchorShop : allAnchorShops) {
+            anchorShop.displaySite(render, app);
+            anchorShop.displayBuilding(render, app);
+        }
+        app.popStyle();
+    }
+
+    public void finalDisplay(WB_Render render, PApplet app){
+        app.pushStyle();
+        for (SimpleShop simpleShop : allSimpleShops) {
+            simpleShop.displayBuilding(render, app);
+        }
+        for (AnchorShop anchorShop : allAnchorShops) {
+            anchorShop.displayBuilding(render, app);
         }
         app.popStyle();
     }

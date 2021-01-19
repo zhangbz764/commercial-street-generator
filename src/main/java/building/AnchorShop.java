@@ -16,14 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * simple shop
+ * description
  *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
- * @date 2021/1/5
- * @time 13:42
+ * @date 2021/1/15
+ * @time 16:30
  */
-public class SimpleShop {
+public class AnchorShop {
     private WB_Polygon originalSite;
     private WB_Polygon generateSite;
 
@@ -33,11 +33,9 @@ public class SimpleShop {
     private List<WB_Polygon> buildingBases;
     private List<BasicBuilding> buildings;
 
-    private boolean sub = false;
-
     /* ------------- constructor ------------- */
 
-    public SimpleShop(WB_Polygon originalSite, List<WB_Polygon> trafficBlocks, List<WB_Polygon> subTrafficBlocks) {
+    public AnchorShop(WB_Polygon originalSite, List<WB_Polygon> trafficBlocks, List<WB_Polygon> subTrafficBlocks) {
         initGenerateSite(originalSite, trafficBlocks, subTrafficBlocks);
     }
 
@@ -66,8 +64,7 @@ public class SimpleShop {
 
     /**
      * set rectangle site to generate building groups
-     * if the original shape is closed to its OBB, then let OBB be it's site
-     * otherwise, record the w / h ratio of the OBB and generate largest rectangle in it
+     * record the w / h ratio of the OBB and generate largest rectangle in it
      *
      * @param originalSite original site polygon
      * @return void
@@ -76,18 +73,13 @@ public class SimpleShop {
         Polygon jtsSite = ZTransform.WB_PolygonToJtsPolygon(originalSite);
         Geometry obb = MinimumDiameter.getMinimumRectangle(jtsSite);
         if (obb instanceof Polygon) {
-            if (jtsSite.getArea() / obb.getArea() > 0.95) {
-//                Polygon obbPolygon = (Polygon) obb;
-//                obbPolygon.getCoordinates()[0].distance(obb.getCoordinates()[1]);
-                this.generateSite = ZTransform.jtsPolygonToWB_Polygon((Polygon) obb.buffer(-0.5));
-            } else {
-                double edgeLength1 = obb.getCoordinates()[0].distance(obb.getCoordinates()[1]);
-                double edgeLength2 = obb.getCoordinates()[1].distance(obb.getCoordinates()[2]);
-                double whRatio = edgeLength1 / edgeLength2;
-                ZLargestRectangleRatio largestRect = new ZLargestRectangleRatio(originalSite, whRatio);
-                largestRect.init();
-                this.generateSite = largestRect.getLargestRectangle();
-            }
+            double edgeLength1 = obb.getCoordinates()[0].distance(obb.getCoordinates()[1]);
+            double edgeLength2 = obb.getCoordinates()[1].distance(obb.getCoordinates()[2]);
+            double whRatio = edgeLength1 / edgeLength2;
+            ZLargestRectangleRatio largestRect = new ZLargestRectangleRatio(originalSite, whRatio);
+            largestRect.init();
+            this.generateSite = largestRect.getLargestRectangle();
+
             this.siteDirPoint = generateSite.getSegment(0).getCenter();
         } else {
             System.out.println("oriented bounding box is not a Polygon, please check input");
@@ -113,7 +105,6 @@ public class SimpleShop {
             if (currSqDist < minDist) {
                 closest = currClosest;
                 minDist = currSqDist;
-                sub = false;
             }
         }
         for (WB_Polygon subTrafficBlock : subTrafficBlocks) {
@@ -122,7 +113,6 @@ public class SimpleShop {
             if (currSqDist < minDist) {
                 closest = currClosest;
                 minDist = currSqDist;
-                sub = true;
             }
         }
         if (closest != null) {
@@ -151,33 +141,93 @@ public class SimpleShop {
         }
     }
 
-
     /**
-     * choose different patterns based on the area and shape of site
+     * generate building base patterns
      *
      * @param generateSite rectangle site to generate building groups
      * @return void
      */
-    private void setBuildingBases(WB_Polygon generateSite) {
-        if (Math.abs(generateSite.getSignedArea()) < 150) {
-            setBasePattern3(generateSite);
-        } else {
-            if (rectangleRatio(generateSite) < 1) {
-                setBasePattern1(generateSite);
-            } else {
-                double random = Math.random();
-                if (random > 0.6) {
-                    setBasePattern3(generateSite);
-                } else {
-                    setBasePattern2(generateSite);
-                }
-            }
-        }
+    public void setBuildingBases(WB_Polygon generateSite) {
+        // assert rectangle
+        this.buildingBases = new ArrayList<>();
 
-    }
+        double[] dist1 = new double[]{
+                ZMath.random(
+                        generateSite.getSegment(0).getLength() * 0.25,
+                        generateSite.getSegment(0).getLength() * 0.3
+                ),
+                ZMath.random(
+                        generateSite.getSegment(1).getLength() * 0.35,
+                        generateSite.getSegment(1).getLength() * 0.45
+                )
+        };
+        WB_Point p1 = generateSite.getSegment(0).getPoint(dist1[0]);
+        WB_Point[] base1 = new WB_Point[]{
+                generateSite.getPoint(0),
+                p1,
+                p1.add(
+                        generateSite.getSegment(1).getDirection().xd() * dist1[1],
+                        generateSite.getSegment(1).getDirection().yd() * dist1[1]
+                ),
+                generateSite.getPoint(0).add(
+                        generateSite.getSegment(1).getDirection().xd() * dist1[1],
+                        generateSite.getSegment(1).getDirection().yd() * dist1[1]
+                ),
+                generateSite.getPoint(0)
+        };
 
-    private double rectangleRatio(WB_Polygon rect) {
-        return rect.getSegment(0).getLength() / rect.getSegment(1).getLength();
+        double[] dist2 = new double[]{
+                ZMath.random(
+                        generateSite.getSegment(0).getLength() * 0.3,
+                        generateSite.getSegment(0).getLength() * 0.4
+                ),
+                ZMath.random(
+                        generateSite.getSegment(1).getLength() * 0.5,
+                        generateSite.getSegment(1).getLength() * 0.65
+                )
+        };
+        WB_Point p2 = generateSite.getSegment(2).getPoint(dist2[0]);
+        WB_Point[] base2 = new WB_Point[]{
+                generateSite.getPoint(2),
+                p2,
+                p2.add(
+                        generateSite.getSegment(3).getDirection().xd() * dist2[1],
+                        generateSite.getSegment(3).getDirection().yd() * dist2[1]
+                ),
+                generateSite.getPoint(2).add(
+                        generateSite.getSegment(3).getDirection().xd() * dist2[1],
+                        generateSite.getSegment(3).getDirection().yd() * dist2[1]
+                ),
+                generateSite.getPoint(2)
+        };
+
+        double[] dist3 = new double[]{
+                ZMath.random(
+                        generateSite.getSegment(0).getLength() * 0.4,
+                        generateSite.getSegment(0).getLength() * 0.5
+                ),
+                ZMath.random(
+                        generateSite.getSegment(1).getLength() * 0.45,
+                        generateSite.getSegment(1).getLength() * 0.6
+                )
+        };
+        WB_Point p3 = generateSite.getSegment(2).getPoint(dist3[0]);
+        WB_Point[] base3 = new WB_Point[]{
+                p3,
+                generateSite.getPoint(3),
+                generateSite.getPoint(3).add(
+                        generateSite.getSegment(3).getDirection().xd() * dist3[1],
+                        generateSite.getSegment(3).getDirection().yd() * dist3[1]
+                ),
+                p3.add(
+                        generateSite.getSegment(3).getDirection().xd() * dist3[1],
+                        generateSite.getSegment(3).getDirection().yd() * dist3[1]
+                ),
+                p3
+        };
+        buildingBases.add(new WB_Polygon(base1));
+        buildingBases.add(new WB_Polygon(base2));
+        buildingBases.add(new WB_Polygon(base3));
     }
 
     /**
@@ -188,119 +238,9 @@ public class SimpleShop {
      */
     private void setBuildings(List<WB_Polygon> buildingBases) {
         this.buildings = new ArrayList<>();
-        if (sub) {
-            for (WB_Polygon base : buildingBases) {
-                buildings.add(new BasicBuilding(base, ZMath.randomInt(1.5, 2.9), ZMath.random(3, 3.5), false));
-            }
-        } else {
-            for (WB_Polygon base : buildingBases) {
-                buildings.add(new BasicBuilding(base, ZMath.randomInt(2.5, 3.5), ZMath.random(3.5, 4), false));
-            }
+        for (WB_Polygon base : buildingBases) {
+            buildings.add(new BasicBuilding(base, ZMath.randomInt(2.5, 3.5), ZMath.random(3, 4), true));
         }
-    }
-
-    /**
-     * 三等分，两边建体量
-     *
-     * @param generateSite rectangle site to generate bases
-     * @return void
-     */
-    private void setBasePattern1(final WB_Polygon generateSite) {
-        // assert rectangle
-        this.buildingBases = new ArrayList<>();
-        double[] dist = ZMath.randomArray(
-                2,
-                generateSite.getSegment(1).getLength() * 0.3,
-                generateSite.getSegment(1).getLength() * 0.36
-        );
-        WB_Point p = generateSite.getSegment(1).getPoint(dist[0]);
-        WB_Point[] base1 = new WB_Point[]{
-                generateSite.getPoint(0),
-                generateSite.getPoint(1),
-                p,
-                generateSite.getPoint(0).add(p.sub(generateSite.getPoint(1))),
-                generateSite.getPoint(0)
-        };
-        WB_Point q = generateSite.getSegment(3).getPoint(dist[1]);
-        WB_Point[] base2 = new WB_Point[]{
-                generateSite.getPoint(2),
-                generateSite.getPoint(3),
-                q,
-                generateSite.getPoint(2).add(q.sub(generateSite.getPoint(3))),
-                generateSite.getPoint(2)
-        };
-        WB_Point[] base3 = new WB_Point[]{
-                base1[2],
-                base2[3],
-
-        };
-        buildingBases.add(new WB_Polygon(base1));
-        buildingBases.add(new WB_Polygon(base2));
-    }
-
-    /**
-     * 对角布置体量
-     *
-     * @param generateSite rectangle site to generate bases
-     * @return void
-     */
-    private void setBasePattern2(final WB_Polygon generateSite) {
-        // assert rectangle
-        this.buildingBases = new ArrayList<>();
-        double[] dist1 = ZMath.randomArray(
-                2,
-                generateSite.getSegment(0).getLength() * 0.5,
-                generateSite.getSegment(0).getLength() * 0.7
-        );
-        double[] dist2 = ZMath.randomArray(
-                2,
-                generateSite.getSegment(1).getLength() * 0.85,
-                generateSite.getSegment(1).getLength()
-        );
-//        WB_Point p = generateSite.getSegment(0).getPoint(dist1[0]);
-        WB_Point p = generateSite.getSegment(0).getPoint(generateSite.getSegment(0).getLength() * 0.5 - 0.4);
-        WB_Point[] base1 = new WB_Point[]{
-                generateSite.getPoint(0),
-                p,
-                p.add(
-                        generateSite.getSegment(1).getDirection().xd() * dist2[0],
-                        generateSite.getSegment(1).getDirection().yd() * dist2[0]
-                ),
-                generateSite.getPoint(0).add(
-                        generateSite.getSegment(1).getDirection().xd() * dist2[0],
-                        generateSite.getSegment(1).getDirection().yd() * dist2[0]
-                ),
-                generateSite.getPoint(0)
-        };
-//        WB_Point q = generateSite.getSegment(2).getPoint(dist1[1]);
-        WB_Point q = generateSite.getSegment(2).getPoint(generateSite.getSegment(2).getLength() * 0.5 - 0.4);
-        WB_Point[] base2 = new WB_Point[]{
-                generateSite.getPoint(2),
-                q,
-                q.add(
-                        generateSite.getSegment(3).getDirection().xd() * dist2[1],
-                        generateSite.getSegment(3).getDirection().yd() * dist2[1]
-                ),
-                generateSite.getPoint(2).add(
-                        generateSite.getSegment(3).getDirection().xd() * dist2[1],
-                        generateSite.getSegment(3).getDirection().yd() * dist2[1]
-                ),
-                generateSite.getPoint(2)
-        };
-        buildingBases.add(new WB_Polygon(base1));
-        buildingBases.add(new WB_Polygon(base2));
-    }
-
-    /**
-     * only one building filling the whole site
-     *
-     * @param
-     * @return void
-     */
-    private void setBasePattern3(final WB_Polygon generateSite) {
-        // assert rectangle
-        this.buildingBases = new ArrayList<>();
-        buildingBases.add(generateSite);
     }
 
     /* ------------- setter & getter ------------- */
@@ -332,5 +272,4 @@ public class SimpleShop {
             app.line(siteCenter.xf(), siteCenter.yf(), siteDirPoint.xf(), siteDirPoint.yf());
         }
     }
-
 }

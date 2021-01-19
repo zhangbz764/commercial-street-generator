@@ -185,10 +185,10 @@ public class Importer {
         for (WB_PolyLine pl : inputSite) {
             render.drawPolyLine(pl);
         }
-        app.stroke(100, 149, 237);
-        for (WB_PolyLine pl : inputSiteWater) {
-            render.drawPolyLine(pl);
-        }
+//        app.stroke(100, 149, 237);
+//        for (WB_PolyLine pl : inputSiteWater) {
+//            render.drawPolyLine(pl);
+//        }
 
         // boundary
 //        app.fill(255);
@@ -214,6 +214,6 @@ public class Importer {
 //        for (WB_Point p : inputInnerNodes2) {
 //            app.ellipse(p.xf(), p.yf(), 10, 10);
 //        }
-//        app.popStyle();
+        app.popStyle();
     }
 }
