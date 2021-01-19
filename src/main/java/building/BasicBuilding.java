@@ -11,7 +11,6 @@ import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
 import java.util.List;
-// TODO: 2021/1/4 完成基本building建模
 
 /**
  * building in the commercial street
