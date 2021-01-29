@@ -77,5 +77,6 @@
     <orderEntry type="module" module-name="Ztools" />
     <orderEntry type="library" name="jswarm-pso_2_08" level="application" />
     <orderEntry type="module" module-name="LargestRectangle" />
+    <orderEntry type="library" name="dashedlines" level="application" />
   </component>
 </module>

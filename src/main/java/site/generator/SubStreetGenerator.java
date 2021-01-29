@@ -10,6 +10,7 @@ import main.MallConstant;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -137,14 +138,14 @@ public class SubStreetGenerator {
 
     /* ------------- draw ------------- */
 
-    public void display(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+    public void display(JtsRender jtsRender, WB_Render render, PApplet app) {
         app.pushStyle();
         displaySplit(jtsRender, app);
         displayGraph(render, app);
         app.popStyle();
     }
 
-    private void displayGraph(WB_Render3D render, PApplet app) {
+    private void displayGraph(WB_Render render, PApplet app) {
         subGraph.display(render, app);
     }
 

@@ -17,6 +17,7 @@ import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Transform3D;
 import wblut.geom.WB_Vector;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -259,7 +260,6 @@ public class StreetGenerator {
             for (int i = 0; i < trafficGraph.length; i++) {
                 trafficGraph[i].removeFixedNode(pointerX, pointerY);
                 refresh(i);
-                ;
             }
         }
         // increase TrafficNode's regionR
@@ -340,7 +340,7 @@ public class StreetGenerator {
 
     /* ------------- draw ------------- */
 
-    public void display(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+    public void display(JtsRender jtsRender, WB_Render render, PApplet app) {
         app.pushStyle();
         displayInputData(render, app);
         displaySplit(jtsRender, app);
@@ -350,7 +350,7 @@ public class StreetGenerator {
         app.popStyle();
     }
 
-    public void finalDisplay(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+    public void finalDisplay(JtsRender jtsRender, WB_Render render, PApplet app) {
         app.pushStyle();
         displayInputData(render, app);
         displaySplit(jtsRender, app);
@@ -359,11 +359,11 @@ public class StreetGenerator {
         app.popStyle();
     }
 
-    private void displayInputData(WB_Render3D render, PApplet app) {
+    private void displayInputData(WB_Render render, PApplet app) {
         inputSite.display(render, app);
     }
 
-    private void displayGraph(WB_Render3D render, PApplet app) {
+    private void displayGraph(WB_Render render, PApplet app) {
         for (TrafficGraph graph : trafficGraph) {
             graph.display(render, app);
         }
@@ -375,7 +375,7 @@ public class StreetGenerator {
         }
     }
 
-    private void displayPlatformBridge(WB_Render3D render, PApplet app) {
+    private void displayPlatformBridge(WB_Render render, PApplet app) {
         for (WB_Polygon p : platformBridge) {
             if (p.getNumberOfHoles() > 0) {
                 ZRender.drawWB_PolygonWithHoles(p, app);

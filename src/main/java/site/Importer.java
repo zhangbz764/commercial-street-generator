@@ -9,6 +9,7 @@ import wblut.geom.WB_Geometry2D;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 /**
@@ -176,7 +177,7 @@ public class Importer {
 
     /*-------- print & draw --------*/
 
-    public void display(WB_Render3D render, PApplet app) {
+    public void display(WB_Render render, PApplet app) {
         app.pushStyle();
         // site
         app.noFill();
