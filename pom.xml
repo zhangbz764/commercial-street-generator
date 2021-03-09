@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>shopping_mall</artifactId>
-        <groupId>groupId</groupId>
+        <groupId>aaa.zbz</groupId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../../../AAA_Project/202009_Shuishi/code/pom.xml</relativePath>
     </parent>
@@ -13,7 +13,7 @@
     <artifactId>commercial_street</artifactId>
     <dependencies>
         <dependency>
-            <groupId>groupId</groupId>
+            <groupId>aaa.zbz</groupId>
             <artifactId>shopping_mall</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
