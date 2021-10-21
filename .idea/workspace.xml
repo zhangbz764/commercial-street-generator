@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f1f97aca-94a9-4edb-8a7a-f82bc4e24cde" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/commercial_street.iml" beforeDir="false" afterPath="$PROJECT_DIR$/commercial_street.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/building/AnchorShop.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/building/BasicBuilding.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/building/SimpleShop.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/main/CommercialStreet.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/main/StreetMain.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/main/TestBuilding.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/site/Exporter.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/site/Importer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/site/generator/BuildingGenerator.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/site/generator/StreetGenerator.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/site/generator/SubStreetGenerator.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/site/generator/SubdivisionGenerator.class" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1zoC0HLHoL4f9AQgYxOmYqAMeRf" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/pom.xml" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f1f97aca-94a9-4edb-8a7a-f82bc4e24cde" name="Changes" comment="" />
+      <created>1634804829861</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1634804829861</updated>
+      <workItem from="1634804831302" duration="9000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
